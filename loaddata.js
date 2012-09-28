@@ -30,6 +30,7 @@ var general = require("./api/general.js");
 var userAPI = require("./api/user.api.js");
 var contactAPI = require("./api/contacts.api.js");
 var worldAPI = require("./api/world.api.js");
+var pooledContentAPI = require("./api/pooledcontent.api.js");
 var runSuites = require("./run_suites.js");
 
 //////////////////////////////////////
@@ -62,12 +63,14 @@ var loadNextBatch = function(){
         var users = general.loadJSONFileIntoArray("./scripts/users/" + currentBatch + ".txt");
         var contacts = general.loadJSONFileIntoArray("./scripts/contacts/" + currentBatch + ".txt");
         var worlds = general.loadJSONFileIntoArray("./scripts/worlds/" + currentBatch + ".txt");
+        var pooledcontent = general.loadJSONFileIntoArray("./scripts/pooledcontent/" + currentBatch + ".txt");
         batches.push({
             "users": users,
             "contacts": contacts,
-            "worlds": worlds
+            "worlds": worlds,
+            "pooledcontent": pooledcontent
         });
-        loadUsers(users, contacts, worlds);
+        loadUsers(users, contacts, worlds, pooledcontent);
     } else {
         console.log("*****************************");
         console.log("Finished generating " + BATCHES + " batches");
@@ -95,7 +98,7 @@ var checkRunSuites = function(){
 // USERS //
 ///////////
 
-var loadUsers = function(users, contacts, worlds){
+var loadUsers = function(users, contacts, worlds, pooledcontent){
     var currentUser = -1;
     var loadNextUser = function(){
         console.log("  Finished Loading User " + (currentUser + 1) + " of " + users.length);
@@ -104,7 +107,7 @@ var loadUsers = function(users, contacts, worlds){
             var nextUser = users[currentUser];
             userAPI.loadUser(nextUser, SERVER_URL, ADMIN_PASSWORD, loadNextUser);
         } else {
-            loadContacts(users, contacts, worlds);
+            loadContacts(users, contacts, worlds, pooledcontent);
         }
     };
     loadNextUser();
@@ -114,7 +117,7 @@ var loadUsers = function(users, contacts, worlds){
 // CONTACTS //
 //////////////
 
-var loadContacts = function(users, contacts, worlds){
+var loadContacts = function(users, contacts, worlds, pooledcontent){
     var currentContact = -1;
     var loadNextContact = function(){
         console.log("  Finished Loading Contact " + (currentContact + 1) + " of " + contacts.length);
@@ -123,7 +126,7 @@ var loadContacts = function(users, contacts, worlds){
             var nextContact = contacts[currentContact];
             contactAPI.loadContact(nextContact, users, SERVER_URL, ADMIN_PASSWORD, loadNextContact);
         } else {
-            loadWorlds(users, worlds);
+            loadWorlds(users, worlds, pooledcontent);
         }
     };
     loadNextContact();
@@ -133,7 +136,7 @@ var loadContacts = function(users, contacts, worlds){
 // WORLDS //
 ////////////
 
-var loadWorlds = function(users, worlds){
+var loadWorlds = function(users, worlds, pooledcontent){
     var currentWorld = -1;
     var loadNextWorld = function(){
         console.log("  Finished Loading World " + (currentWorld + 1) + " of " + worlds.length);
@@ -142,13 +145,13 @@ var loadWorlds = function(users, worlds){
             var nextWorld = worlds[currentWorld];
             worldAPI.loadWorld(nextWorld, users, SERVER_URL, ADMIN_PASSWORD, loadNextWorld);
         } else {
-            loadWorldGroupMemberships(users, worlds);
+            loadWorldGroupMemberships(users, worlds, pooledcontent);
         }
     };
     loadNextWorld();
 };
 
-var loadWorldGroupMemberships = function(users, worlds){
+var loadWorldGroupMemberships = function(users, worlds, pooledcontent){
     var currentWorldGroupMembership = -1;
     var loadNextWorldGroupMembership = function(){
         console.log("  Finished Loading Group Memberships " + (currentWorldGroupMembership + 1) + " of " + worlds.length);
@@ -157,11 +160,32 @@ var loadWorldGroupMemberships = function(users, worlds){
             var nextWorld = worlds[currentWorldGroupMembership];
             worldAPI.loadGroupMembership(nextWorld, users, SERVER_URL, ADMIN_PASSWORD, loadNextWorldGroupMembership);
         } else {
-            checkRunSuites();
+            loadPooledContent(users, pooledcontent)
         }
     };
     loadNextWorldGroupMembership();
 };
+
+
+////////////////////
+// POOLED CONTENT //
+////////////////////
+
+var loadPooledContent = function(users, pooledContent)  {
+    var currentPooledContent = -1;
+    var loadNextPooledContent = function() {
+        console.log("  Finished Loading PooledContent " + (currentPooledContent + 1) + " of " + pooledContent.length);
+        currentPooledContent++;
+        if (currentPooledContent < pooledContent.length){
+            var nextPooledContent = pooledContent[currentPooledContent];
+            pooledContentAPI.loadPooledContent(nextPooledContent, users, SERVER_URL, ADMIN_PASSWORD, loadNextPooledContent);
+        } else {
+            checkRunSuites();
+        }
+    };
+    loadNextPooledContent();
+};
+
 
 ///////////
 // START //

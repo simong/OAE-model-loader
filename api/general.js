@@ -247,7 +247,7 @@ exports.filePost = function(reqUrl, file, name, options, cb){
 
         // when the response has finished
         res.on('end', function(){
-            
+
             // fire callback
             exports.requests++;
             if (res.statusCode === 500 || res.statusCode === 400){
@@ -402,9 +402,11 @@ exports.generateCity = function(){
 };
 
 exports.generateRandomURL = function(){
-    
+    var urls = exports.loadFileIntoArray("./data/urls.txt");
+    return urls[Math.floor(Math.random() * urls.length)];
 };
 
 exports.generateRandomYoutubeUrl = function(){
-    
+    var urls = exports.loadFileIntoArray("./data/youtube.txt");
+    return urls[Math.floor(Math.random() * urls.length)];
 };
